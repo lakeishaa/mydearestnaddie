@@ -18,7 +18,7 @@ body {
     left: 50%;
     width: 360px; /* increased from 200px */
     height: 360px; /* increased from 200px */
-    transform: translate(-50%, -50%) scale(1.5);
+    transform: translate(-50%, -50%) scale(1);
     cursor: pointer;
   }
 
