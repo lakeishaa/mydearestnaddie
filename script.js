@@ -50,3 +50,72 @@
       }, 2500);
     });
   })();
+
+  // i fear nothing
+  (function () {
+    const hoverArea = document.querySelector(".letter-image");
+    const container = document.querySelector(".letter .letter-context-body");
+    if (!hoverArea || !container) return;
+  
+    let rafId = null;
+    let direction = 1; // 1 = scroll down, -1 = up
+    let lastTime = 0;
+  
+    // speed scales with content length; tune baseSpeed to taste
+    function getSpeedPxPerSec() {
+      const max = container.scrollHeight - container.clientHeight;
+      // 30–70 px/s depending on how long the content is
+      return Math.min(70, Math.max(30, max / 8));
+    }
+  
+    function step(ts) {
+      if (!lastTime) lastTime = ts;
+      const dt = (ts - lastTime) / 1000; // seconds
+      lastTime = ts;
+  
+      const max = container.scrollHeight - container.clientHeight;
+      if (max <= 0) return; // nothing to scroll
+  
+      const speed = getSpeedPxPerSec();
+      container.scrollTop += direction * speed * dt;
+  
+      // bounce at edges
+      if (container.scrollTop <= 0) {
+        container.scrollTop = 0;
+        direction = 1;
+      } else if (container.scrollTop >= max) {
+        container.scrollTop = max;
+        direction = -1;
+      }
+  
+      rafId = requestAnimationFrame(step);
+    }
+  
+    function start() {
+      // Only auto-scroll when the envelope is "open" (on hover)
+      cancelAnimationFrame(rafId);
+      lastTime = 0;
+      rafId = requestAnimationFrame(step);
+    }
+  
+    function stop() {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  
+    // If the user manually scrolls, we keep animating but in the current direction
+    let lastScrollTop = 0;
+    container.addEventListener("scroll", () => {
+      const now = container.scrollTop;
+      direction = now >= lastScrollTop ? 1 : -1;
+      lastScrollTop = now;
+    }, { passive: true });
+  
+    hoverArea.addEventListener("mouseenter", start);
+    hoverArea.addEventListener("mouseleave", stop);
+  
+    // Also stop on page hide to be nice to the CPU
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+    });
+  })();
