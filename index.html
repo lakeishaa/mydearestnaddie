@@ -11,6 +11,38 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
+        <style>
+          :root { --hint-bg: rgba(0,0,0,.6); --hint-fg: #fff; }
+          html, body { height: 100%; margin: 0; }
+          body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            display: grid; place-items: center;
+            /* background: #0f172a; color: #e5e7eb; */
+          }
+          .wrap { text-align: center; }
+          h1 { font-size: 1.25rem; margin: .25rem 0 .5rem; }
+          p { margin: 0; opacity: .8; }
+      
+          /* The little “enable sound” chip */
+          .hint {
+            position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+            background: var(--hint-bg); color: var(--hint-fg);
+            padding: 10px 14px; border-radius: 999px;
+            display: flex; gap: 10px; align-items: center;
+            user-select: none; -webkit-user-select: none;
+            backdrop-filter: blur(6px);
+            transition: opacity .25s ease, visibility .25s ease;
+            cursor: pointer;
+          }
+          .hint.hidden { opacity: 0; visibility: hidden; }
+          .hint button {
+            all: unset;
+            padding: 6px 10px; border-radius: 999px;
+            background: #BB1998; color: #fffce5; font-weight: 600;
+          }
+          .hint .dot { width: 8px; height: 8px; border-radius: 50%; background: #BB1998; }
+          .sr-only { position: absolute; width: 1px; height: 1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,1px,1px); white-space:nowrap; border:0; }
+        </style>
     </head>
     <body>
         <div class="letter-image">
@@ -47,11 +79,159 @@
             </div>
             <!-- <div class="shadow"></div> -->
           </div>
-          <div style="opacity: 0.5;">
-            <audio controls="" autoplay="">
-              <source src="bound.mp3" type="audio/mpeg">
+          <!-- <div style="opacity: 0.5;">
+            <audio id="myAudio" autoplay muted playsinline preload="auto" controls>
+              <source src="bound.mp3" type="audio/mpeg" />
             </audio>
+          </div> -->
+      
+          <!-- letter starts here -->
+          <!-- <div class="wrap">
+            <h1>Audio will start automatically</h1>
+            <p>(If your browser blocks it, tap/click once to enable sound.)</p>
+          </div> -->
+        
+          <!-- Your audio -->
+          <audio id="bgAudio"
+                 src="bound.mp3"
+                 preload="auto"
+                 loop
+                 playsinline
+                 webkit-playsinline
+                 muted
+          ></audio>
+        
+          <!-- Enable-sound hint -->
+          <div id="hint" class="hint" role="button" tabindex="0" aria-label="Enable sound">
+            <span class="dot" aria-hidden="true"></span>
+            <span>Tap to enable sound</span>
+            <button id="enableBtn" type="button" aria-describedby="hint-desc">Enable</button>
+            <span id="hint-desc" class="sr-only">Press to unmute audio</span>
           </div>
+          
         <script src="./script.js" async defer></script>
+        <!-- <script>
+          // --- minimal inline safety in case external script fails to load ---
+          (function () {
+            const audio = document.getElementById("myAudio");
+            if (!audio) return;
+    
+            // Try muted autoplay once DOM is ready (some browsers allow this)
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", tryMutedAutoplay);
+            } else {
+              tryMutedAutoplay();
+            }
+    
+            async function tryMutedAutoplay() {
+              try {
+                audio.muted = true;     // ensure muted before play()
+                audio.volume = 0;       // start silent
+                await audio.play();     // permitted when muted
+              } catch (_) {
+                // Autoplay blocked; we'll handle on first gesture
+              }
+            }
+    
+            // On first user gesture, fade in sound
+            let armed = true;
+            const enableSound = async () => {
+              if (!armed) return;
+              armed = false;
+    
+              try {
+                if (audio.paused) await audio.play();
+                audio.muted = false;
+    
+                // smooth fade-in
+                let v = 0;
+                const step = 0.05;
+                const id = setInterval(() => {
+                  v = Math.min(1, v + step);
+                  audio.volume = v;
+                  if (v >= 1) clearInterval(id);
+                }, 100);
+              } catch (_) {
+                // If play still fails, re-arm to try again on the next gesture
+                armed = true;
+              }
+            };
+    
+            ["click", "touchstart", "keydown"].forEach((ev) =>
+              document.addEventListener(ev, enableSound, { once: false, passive: true })
+            );
+          })();
+        </script> -->
+        <script>
+          (function () {
+            const audio = document.getElementById('bgAudio');
+            const hint  = document.getElementById('hint');
+            const enableBtn = document.getElementById('enableBtn');
+      
+            if (!audio) return;
+      
+            // Try to autoplay silently on load
+            document.addEventListener('DOMContentLoaded', async () => {
+              try {
+                audio.volume = 0;     // start silent
+                audio.muted  = true;  // required for autoplay
+                await audio.play();   // most browsers allow muted autoplay
+                // If autoplay succeeded, keep hint visible until user interacts (we’ll unmute then)
+              } catch (err) {
+                // Autoplay blocked even while muted (rare). We’ll rely on the gesture fallback below.
+                // console.debug('Muted autoplay blocked:', err?.name || err);
+              }
+            });
+      
+            let soundEnabled = false;
+      
+            async function enableSound() {
+              if (soundEnabled) return;
+              soundEnabled = true;
+      
+              try {
+                // Ensure audio is at least playing (some browsers require play() AFTER gesture)
+                if (audio.paused) await audio.play();
+      
+                audio.muted = false;
+      
+                // Fade in volume over ~1.5s
+                let v = 0;
+                const step = 0.05;     // 20 steps
+                const iv = setInterval(() => {
+                  v = Math.min(1, v + step);
+                  audio.volume = v;
+                  if (v >= 1) clearInterval(iv);
+                }, 75);
+      
+                // Hide the hint
+                hint.classList.add('hidden');
+              } catch (err) {
+                // If something still fails, re-show hint so the user can try again
+                soundEnabled = false;
+                hint.classList.remove('hidden');
+                // console.debug('Enable sound failed:', err?.name || err);
+              }
+            }
+      
+            // First user gesture anywhere enables sound
+            const firstGesture = () => { enableSound(); window.removeEventListener('pointerdown', firstGesture); };
+            window.addEventListener('pointerdown', firstGesture, { once: true });
+      
+            // Also wire the visible controls
+            enableBtn.addEventListener('click', enableSound);
+            hint.addEventListener('click', enableSound);
+            hint.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enableSound(); }
+            });
+      
+            // Optional: if the page becomes visible again, ensure audio is playing
+            document.addEventListener('visibilitychange', async () => {
+              if (document.visibilityState === 'visible' && !audio.paused) {
+                try { await audio.play(); } catch (_) {}
+              }
+            });
+          })();
+        </script>
     </body>
 </html>

@@ -1,6 +1,60 @@
-document.addEventListener("click", () => {
-  document.getElementById("myAudio").play();
-});
+document.addEventListener('click', () => {
+  const a = document.getElementById('myAudio');
+  if (!a) return;
+  a.muted = false;      // unmute
+  a.volume = 1;         // or fade in if you prefer
+  a.play().catch(() => {}); // in case it was paused
+}, { once: true });
+
+
+
+(function () {
+  const audio = document.getElementById("myAudio");
+  if (!audio) return;
+
+  // Try to autoplay silently on load
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      audio.volume = 0;   // start silent
+      audio.muted  = true;
+      await audio.play(); // many browsers allow muted autoplay
+      // optional: ramp up a tiny bit so it's "alive" but still silent
+    } catch (err) {
+      // Autoplay blocked: that's fine—we'll enable on first gesture
+      // console.log("Muted autoplay blocked:", err?.name || err);
+    }
+  });
+
+  // On first user gesture, unmute and fade in
+  async function enableSound() {
+    try {
+      // Unmute + fade in volume over ~2s
+      audio.muted = false;
+      let v = 0, step = 0.05;
+      const id = setInterval(() => {
+        v = Math.min(1, v + step);
+        audio.volume = v;
+        if (v >= 1) clearInterval(id);
+      }, 100);
+
+      // If the audio wasn't playing, start it now
+      if (audio.paused) await audio.play();
+    } catch (e) {
+      // console.warn("Play after gesture failed:", e);
+    } finally {
+      // Remove listeners after first successful attempt
+      ["click","touchstart","keydown"].forEach(ev =>
+        document.removeEventListener(ev, enableSound)
+      );
+    }
+  }
+
+  // Count lots of things as a "gesture"
+  ["click","touchstart","keydown"].forEach(ev =>
+    document.addEventListener(ev, enableSound, { once: true })
+  );
+})();
+
 
 // 🎃🍄🐌🔮🎪🎬🎭🍋🌈🤡 spawn random emojis while hovering the envelope
 (function () {

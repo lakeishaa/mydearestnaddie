@@ -83,7 +83,7 @@ body {
     position: absolute;
     width: 288px;  /* was 160px */
     height: 120px; /* was 60px */
-    background: rgb(255, 252, 229);
+    background: #fffce5;
     z-index: 1;
     overflow: hidden;
     transition: 0.4s 0.2s;
