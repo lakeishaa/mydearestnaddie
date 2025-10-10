@@ -70,13 +70,13 @@
   
     function step(ts) {
       if (!lastTime) lastTime = ts;
-      const dt = (ts - lastTime) / 1000; // seconds
+      const dt = (ts - lastTime) / 1000;
       lastTime = ts;
-  
+    
       const max = container.scrollHeight - container.clientHeight;
-      if (max <= 0) return; // nothing to scroll
-  
-      const speed = getSpeedPxPerSec();
+      if (max <= 0) return;
+    
+      const speed = getSpeedPxPerSec() * 0.33; // 33% of current speed
       container.scrollTop += direction * speed * dt;
   
       // bounce at edges

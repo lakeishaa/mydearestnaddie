@@ -12,6 +12,10 @@ body {
     font-style: normal;
   }  
 
+#audio{
+  opacity: 0.5;
+}
+
   .letter-image {
     position: absolute;
     top: 50%;
