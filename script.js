@@ -1,3 +1,7 @@
+document.addEventListener("click", () => {
+  document.getElementById("myAudio").play();
+});
+
 // 🎃🍄🐌🔮🎪🎬🎭🍋🌈🤡 spawn random emojis while hovering the envelope
 (function () {
     const hoverTarget = document.querySelector(".letter-image");
