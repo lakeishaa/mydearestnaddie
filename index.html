@@ -15,7 +15,7 @@
           :root { --hint-bg: rgba(0,0,0,.6); --hint-fg: #fff; }
           html, body { height: 100%; margin: 0; }
           body {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            /* font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; */
             display: grid; place-items: center;
             /* background: #0f172a; color: #e5e7eb; */
           }
@@ -25,6 +25,7 @@
       
           /* The little “enable sound” chip */
           .hint {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
             position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
             background: var(--hint-bg); color: var(--hint-fg);
             padding: 10px 14px; border-radius: 999px;
